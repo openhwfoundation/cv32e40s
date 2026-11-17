@@ -246,7 +246,8 @@ module cv32e40s_instr_obi_interface import cv32e40s_pkg::*;
         .obi_req_i          (m_c_obi_instr_if.s_req.req             ),
         .obi_gnt_i          (m_c_obi_instr_if.s_gnt.gnt             ),
         .obi_rvalid_i       (m_c_obi_instr_if.s_rvalid.rvalid       ),
-        .obi_resp_i         (resp_o                                 )
+        .obi_resp_i         (resp_o                                 ),
+        .resp_is_store_o    (                                       )
       );
 
 

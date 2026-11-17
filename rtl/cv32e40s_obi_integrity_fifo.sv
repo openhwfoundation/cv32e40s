@@ -32,7 +32,8 @@
 
 module cv32e40s_obi_integrity_fifo import cv32e40s_pkg::*;
 #(  parameter int unsigned  MAX_OUTSTANDING   = 2,
-    parameter type RESP_TYPE = obi_inst_resp_t
+    parameter type RESP_TYPE = obi_inst_resp_t,
+    parameter logic ERROR_CHECK = 1'b1
  )
 (
   input  logic                       clk,
@@ -60,7 +61,9 @@ module cv32e40s_obi_integrity_fifo import cv32e40s_pkg::*;
   input  logic                        obi_req_i,
   input  logic                        obi_gnt_i,
   input  logic                        obi_rvalid_i,
-  input  RESP_TYPE                    obi_resp_i
+  input  RESP_TYPE                    obi_resp_i,
+
+  output logic                        resp_is_store_o
 
 );
 
@@ -79,7 +82,6 @@ module cv32e40s_obi_integrity_fifo import cv32e40s_pkg::*;
 
   // Parity and rchk error signals
   logic       gntpar_err_q;                           // gnt parity error (sticky for waited grants)
-  logic [1:0] rchk_en;                                // Rchk enable. bit0: for bits 3:0, bit1: bit 4 of rchk
   logic       resp_is_store;
 
   // Outstanding counter signals
@@ -96,6 +98,7 @@ module cv32e40s_obi_integrity_fifo import cv32e40s_pkg::*;
   /////////////////////////////////////////////////////////////
   assign count_up = obi_req_i && obi_gnt_i;  // Increment upon accepted transfer request
   assign count_down = obi_rvalid_i;                       // Decrement upon accepted transfer response
+  assign resp_is_store_o = resp_is_store;
 
   always_comb begin
     case ({count_up, count_down})
@@ -170,22 +173,28 @@ module cv32e40s_obi_integrity_fifo import cv32e40s_pkg::*;
   assign resp_is_store     = fifo_q[cnt_q].store;
   assign gntpar_err_resp_o = fifo_q[cnt_q].gnterr;
 
-  // Enable rchk when in response phase and cpuctrl.integrity is set
-  // Only enable check of bits 3:0 (rchk_en[0]) for loads
-  assign rchk_en[0] = obi_rvalid_i && xsecure_ctrl_i.cpuctrl.integrity && !resp_is_store;
-  assign rchk_en[1] = obi_rvalid_i && xsecure_ctrl_i.cpuctrl.integrity;
-
   // Recompute and check rchk
-  cv32e40s_rchk_check
-  #(
-      .RESP_TYPE (RESP_TYPE)
-  )
-  rchk_i
-  (
-    .resp_i   (obi_resp_i     ),
-    .enable_i (rchk_en        ),
-    .err_o    (rchk_err_resp_o)
-  );
+  if (ERROR_CHECK) begin : g_rchk_check
+    logic [1:0] rchk_en;  // Rchk enable. bit0: for bits 3:0, bit1: bit 4 of rchk
+
+    // Enable rchk when in response phase and cpuctrl.integrity is set
+    // Only enable check of bits 3:0 (rchk_en[0]) for loads
+    assign rchk_en[0] = obi_rvalid_i && xsecure_ctrl_i.cpuctrl.integrity && !resp_is_store;
+    assign rchk_en[1] = obi_rvalid_i && xsecure_ctrl_i.cpuctrl.integrity;
+
+    cv32e40s_rchk_check
+    #(
+        .RESP_TYPE (RESP_TYPE)
+    )
+    rchk_i
+    (
+      .resp_i   (obi_resp_i     ),
+      .enable_i (rchk_en        ),
+      .err_o    (rchk_err_resp_o)
+    );
+  end else begin : g_no_rchk_check
+    assign rchk_err_resp_o = 1'b0;
+  end
 
   assign protocol_err_o = obi_rvalid_i && !(|cnt_q);
 

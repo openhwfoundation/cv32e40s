@@ -101,7 +101,7 @@ module cv32e40s_core import cv32e40s_pkg::*;
   input  logic                          data_gntpar_i,          // secure
   input  logic                          data_rvalidpar_i,       // secure
   output logic [12:0]                   data_achk_o,            // secure
-  input  logic [4:0]                    data_rchk_i,            // secure
+  input  logic [6:0]                    data_rchk_i,            // secure
 
   // Cycle count
   output logic [63:0]                   mcycle_o,

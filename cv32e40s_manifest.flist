@@ -79,6 +79,7 @@ ${DESIGN_RTL_DIR}/cv32e40s_pc_target.sv
 ${DESIGN_RTL_DIR}/cv32e40s_wpt.sv
 ${DESIGN_RTL_DIR}/cv32e40s_pc_check.sv
 ${DESIGN_RTL_DIR}/cv32e40s_rchk_check.sv
+${DESIGN_RTL_DIR}/cv32e40s_rchk_ecc.sv
 ${DESIGN_RTL_DIR}/cv32e40s_lfsr.sv
 
 ${DESIGN_RTL_DIR}/../bhv/cv32e40s_sim_sffr.sv

@@ -124,7 +124,7 @@ module cv32e40s_wrapper
   output logic        data_dbg_o,
   output logic [31:0] data_wdata_o,
   input  logic [31:0] data_rdata_i,
-  input  logic [4:0]  data_rchk_i,
+  input  logic [6:0]  data_rchk_i,
   input  logic        data_err_i,
 
   // Cycle Count
